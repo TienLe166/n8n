@@ -22,3 +22,4 @@ services:
       DB_POSTGRESDB_HOST: postgres
       DB_TYPE: postgresdb
       DB_POSTGRESDB_PASSWORD: password
+      N8N_NODE_PACKAGES_INCLUDE=@n8n/n8n-nodes-langchain
