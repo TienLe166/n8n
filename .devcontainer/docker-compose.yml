@@ -23,7 +23,7 @@ services:
     volumes:
       - n8n-data:/home/node/.n8n # Sử dụng volume chuyên dụng cho n8n
       - ..:/workspaces:cached
-    command: n8n start # Thay đổi command để n8n tự khởi động
+    command:
     depends_on: # Đảm bảo postgres khởi động trước n8n
       - postgres
     environment:
