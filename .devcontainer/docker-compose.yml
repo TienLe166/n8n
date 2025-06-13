@@ -1,5 +1,6 @@
 volumes:
   postgres-data:
+  n8n-data: # Thêm volume cho n8n để lưu trữ dữ liệu workflow
 
 services:
   postgres:
@@ -9,17 +10,40 @@ services:
       - postgres-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n # Thêm user, nên giống với DB name
       - POSTGRES_PASSWORD=password
 
   n8n:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always # Thêm restart policy để n8n tự khởi động lại
+    ports:
+      - "5678:5678" # Mở port để truy cập n8n từ bên ngoài
     volumes:
+      - n8n-data:/home/node/.n8n # Sử dụng volume chuyên dụng cho n8n
       - ..:/workspaces:cached
-    command: sleep infinity
+    command: n8n start # Thay đổi command để n8n tự khởi động
+    depends_on: # Đảm bảo postgres khởi động trước n8n
+      - postgres
     environment:
-      DB_POSTGRESDB_HOST: postgres
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_PASSWORD: password
-      N8N_NODE_PACKAGES_INCLUDE=@n8n/n8n-nodes-langchain
+      # --- Cấu hình Database (Hoàn thiện) ---
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n # Cần khớp với POSTGRES_DB
+      - DB_POSTGRESDB_USER=n8n # Cần khớp với POSTGRES_USER
+      - DB_POSTGRESDB_PASSWORD=password
+
+      # --- Khóa Mã Hóa (RẤT QUAN TRỌNG) ---
+      - N8N_ENCRYPTION_KEY=YOUR_STRONG_RANDOM_ENCRYPTION_KEY # <-- THAY THẾ KEY NÀY
+
+      # --- Cấu hình Múi giờ ---
+      - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
+      - TZ=Asia/Ho_Chi_Minh
+
+      # --- Cấu hình URL Webhook ---
+      - WEBHOOK_URL=http://localhost:5678/ # <-- THAY THẾ BẰNG DOMAIN CỦA BẠN KHI DEPLOY
+
+      # --- Cấu hình Gói Node AI ---
+      - N8N_NODE_PACKAGES_INCLUDE=@n8n/n8n-nodes-langchain
